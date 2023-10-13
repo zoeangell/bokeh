@@ -302,6 +302,11 @@
       name: "UnionRenderers",
       attributes: {},
     },
+    inspection_policy: {
+      type: "object",
+      name: "UnionRenderers",
+      attributes: {},
+    },
   },
   ColumnDataSource: {
     __extends__: "ColumnarDataSource",
@@ -3279,6 +3284,11 @@
               name: "UnionRenderers",
               attributes: {},
             },
+            inspection_policy: {
+              type: "object",
+              name: "UnionRenderers",
+              attributes: {},
+            },
             data: {
               type: "map",
               entries: [
@@ -3325,6 +3335,11 @@
               },
             },
             selection_policy: {
+              type: "object",
+              name: "UnionRenderers",
+              attributes: {},
+            },
+            inspection_policy: {
               type: "object",
               name: "UnionRenderers",
               attributes: {},
@@ -4496,6 +4511,11 @@
           },
         },
         selection_policy: {
+          type: "object",
+          name: "UnionRenderers",
+          attributes: {},
+        },
+        inspection_policy: {
           type: "object",
           name: "UnionRenderers",
           attributes: {},
@@ -6693,6 +6713,11 @@
           },
         },
         selection_policy: {
+          type: "object",
+          name: "UnionRenderers",
+          attributes: {},
+        },
+        inspection_policy: {
           type: "object",
           name: "UnionRenderers",
           attributes: {},

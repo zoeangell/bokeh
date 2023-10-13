@@ -11,7 +11,7 @@ import type {DataRendererView} from "../../renderers/data_renderer"
 import {tool_icon_tap_select} from "styles/icons.css"
 
 export type TapToolCallback = CallbackLike1<TapTool, {
-  geometries: PointGeometry & {x: number, y: number}
+  geometries: (PointGeometry & {x: number, y: number})[]
   source: ColumnarDataSource
   event: {
     modifiers?: KeyModifiers
@@ -22,51 +22,70 @@ export class TapToolView extends SelectToolView {
   declare model: TapTool
 
   override _tap(ev: TapEvent): void {
-    if (this.model.gesture == "tap")
+    if (this.model.gesture == "tap") {
       this._handle_tap(ev)
+    }
   }
 
   override _doubletap(ev: TapEvent): void {
-    if (this.model.gesture == "doubletap")
+    if (this.model.gesture == "doubletap") {
       this._handle_tap(ev)
+    }
   }
 
   _handle_tap(ev: TapEvent): void {
-    const {modifiers} = this.model
-    if (modifiers.shift != null && modifiers.shift != ev.modifiers.shift)
+    const handle_event = (() => {
+      const {modifiers} = this.model
+      if (modifiers.shift != null && modifiers.shift != ev.modifiers.shift) {
+        return false
+      }
+      if (modifiers.ctrl != null && modifiers.ctrl != ev.modifiers.ctrl) {
+        return false
+      }
+      if (modifiers.alt != null && modifiers.alt != ev.modifiers.alt) {
+        return false
+      }
+      return true
+    })()
+
+    if (!handle_event) {
       return
-    if (modifiers.ctrl != null && modifiers.ctrl != ev.modifiers.ctrl)
-      return
-    if (modifiers.alt != null && modifiers.alt != ev.modifiers.alt)
-      return
+    }
 
     const {sx, sy} = ev
     const {frame} = this.plot_view
-    if (!frame.bbox.contains(sx, sy))
+    if (!frame.bbox.contains(sx, sy)) {
       return
+    }
 
     this._clear_other_overlays()
 
     const geometry: PointGeometry = {type: "point", sx, sy}
-    if (this.model.behavior == "select") {
-      this._select(geometry, true, this._select_mode(ev.modifiers))
-    } else {
-      this._inspect(geometry, ev.modifiers)
+    const {modifiers} = ev
+    const mode = this._select_mode(modifiers)
+
+    switch (this.model.behavior) {
+      case "select": {
+        this._select(geometry, true, mode, modifiers)
+        break
+      }
+      case "inspect": {
+        this._inspect(geometry, true, mode, modifiers)
+        break
+      }
     }
   }
 
-  protected _select(geometry: PointGeometry, final: boolean, mode: SelectionMode): void {
+  protected _select(geometry: PointGeometry, final: boolean, mode: SelectionMode, modifiers?: KeyModifiers): void {
     const renderers_by_source = this._computed_renderers_by_data_source()
 
-    for (const [, renderers] of renderers_by_source) {
-      const sm = renderers[0].get_selection_manager()
-      const r_views = renderers
+    for (const [source, renderers] of renderers_by_source) {
+      const renderer_views = renderers
         .map((r) => this.plot_view.renderer_view(r))
-        .filter((rv): rv is NonNullable<DataRendererView> => rv != null)
-      const did_hit = sm.select(r_views, geometry, final, mode)
+        .filter((rv): rv is DataRendererView => rv != null)
+      const did_hit = source.selection_manager.select(renderer_views, geometry, final, mode)
       if (did_hit) {
-        const [rv] = r_views
-        this._emit_callback(rv, geometry, sm.source)
+        this._emit_callback(renderer_views, geometry, source, modifiers)
       }
     }
 
@@ -74,27 +93,30 @@ export class TapToolView extends SelectToolView {
     this.plot_view.state.push("tap", {selection: this.plot_view.get_selection()})
   }
 
-  protected _inspect(geometry: PointGeometry, modifiers?: KeyModifiers): void {
-    for (const r of this.computed_renderers) {
-      const rv = this.plot_view.renderer_view(r)
-      if (rv == null)
-        continue
+  protected _inspect(geometry: PointGeometry, final: boolean, mode: SelectionMode, modifiers?: KeyModifiers): void {
+    const renderers_by_source = this._computed_renderers_by_data_source()
 
-      const sm = r.get_selection_manager()
-      const did_hit = sm.inspect(rv, geometry)
+    for (const [source, renderers] of renderers_by_source) {
+      const renderer_views = renderers
+        .map((r) => this.plot_view.renderer_view(r))
+        .filter((rv): rv is DataRendererView => rv != null)
+      const did_hit = source.selection_manager.inspect(renderer_views, geometry, final, mode)
       if (did_hit) {
-        this._emit_callback(rv, geometry, sm.source, modifiers)
+        this._emit_callback(renderer_views, geometry, source, modifiers)
       }
     }
   }
 
-  protected _emit_callback(rv: DataRendererView, geometry: PointGeometry, source: ColumnarDataSource, modifiers?: KeyModifiers): void {
+  protected _emit_callback(renderer_views: DataRendererView[], geometry: PointGeometry, source: ColumnarDataSource, modifiers?: KeyModifiers): void {
     const {callback} = this.model
-    if (callback != null) {
-      const x = rv.coordinates.x_scale.invert(geometry.sx)
-      const y = rv.coordinates.y_scale.invert(geometry.sy)
+    if (callback != null && renderer_views.length != 0) {
+      const geometries = renderer_views.map((rv) => {
+        const x = rv.coordinates.x_scale.invert(geometry.sx)
+        const y = rv.coordinates.y_scale.invert(geometry.sy)
+        return {...geometry, x, y}
+      })
       const data = {
-        geometries: {...geometry, x, y},
+        geometries,
         source,
         event: {modifiers},
       }

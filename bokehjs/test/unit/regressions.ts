@@ -222,7 +222,7 @@ describe("Bug", () => {
   })
 
   describe("in issue #11750", () => {
-    it("makes plots render uncecessarily when hover glyph wasn't defined", async () => {
+    it("makes plots render unnecessarily when hover glyph wasn't defined", async () => {
       async function test(hover_glyph: Line | null) {
         const data_source = new ColumnDataSource({data: {x: [0, 1], y: [0.1, 0.1]}})
         const glyph = new Line({line_color: "red"})
@@ -252,7 +252,7 @@ describe("Bug", () => {
   })
 
   describe("in issue #11999", () => {
-    it("makes plots render uncecessarily when inspection indices don't change", async () => {
+    it("makes plots render unnecessarily when inspection indices don't change", async () => {
       const data_source = new ColumnDataSource({data: {x: [0, 0.6], y: [0.6, 0], width: [0.4, 0.4], height: [0.4, 0.4]}})
       const glyph = new Rect({line_color: "red"})
       const hover_glyph = new Rect({line_color: "blue"})

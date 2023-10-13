@@ -23,6 +23,7 @@ export namespace ColumnarDataSource {
   export type Props = DataSource.Props & {
     data: p.Property<{[key: string]: Arrayable}> // XXX: this is hack!!!
     selection_policy: p.Property<SelectionPolicy>
+    inspection_policy: p.Property<SelectionPolicy>
     inspected: p.Property<Selection>
   }
 }
@@ -46,7 +47,7 @@ export abstract class ColumnarDataSource extends DataSource {
   }
 
   _select: Signal0<this>
-  inspect: Signal<[GlyphRenderer, {geometry: Geometry}], this>
+  inspect: Signal<[GlyphRenderer[], {geometry: Geometry}], this>
 
   readonly selection_manager = new SelectionManager(this)
 
@@ -57,10 +58,11 @@ export abstract class ColumnarDataSource extends DataSource {
   static {
     this.define<ColumnarDataSource.Props>(({Ref}) => ({
       selection_policy: [ Ref(SelectionPolicy), () => new UnionRenderers() ],
+      inspection_policy: [ Ref(SelectionPolicy), () => new UnionRenderers() ],
     }))
 
     this.internal<ColumnarDataSource.Props>(({AnyRef}) => ({
-      inspected:         [ AnyRef(), () => new Selection() ],
+      inspected: [ AnyRef(), () => new Selection() ],
     }))
   }
 

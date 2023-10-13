@@ -2,7 +2,7 @@ import {GestureTool, GestureToolView} from "./gesture_tool"
 import {GlyphRenderer} from "../../renderers/glyph_renderer"
 import {GraphRenderer} from "../../renderers/graph_renderer"
 import {DataRenderer} from "../../renderers/data_renderer"
-import type {DataSource} from "../../sources/data_source"
+import type {ColumnarDataSource} from "../../sources/columnar_data_source"
 import {compute_renderers} from "../../util"
 import type * as p from "core/properties"
 import type {KeyEvent, KeyModifiers} from "core/ui_events"
@@ -12,6 +12,7 @@ import type {Geometry} from "core/geometry"
 import {Signal0} from "core/signaling"
 import type {MenuItem} from "core/util/menus"
 import {unreachable} from "core/util/assert"
+import {logger} from "core/logging"
 
 export abstract class SelectToolView extends GestureToolView {
   declare model: SelectTool
@@ -27,17 +28,19 @@ export abstract class SelectToolView extends GestureToolView {
     return compute_renderers(renderers, all_renderers)
   }
 
-  _computed_renderers_by_data_source(): Map<DataSource, DataRenderer[]> {
-    const renderers_by_source: Map<DataSource, DataRenderer[]> = new Map()
+  _computed_renderers_by_data_source(): Map<ColumnarDataSource, DataRenderer[]> {
+    const renderers_by_source: Map<ColumnarDataSource, DataRenderer[]> = new Map()
 
     for (const r of this.computed_renderers) {
-      let source: DataSource
-      if (r instanceof GlyphRenderer)
+      let source: ColumnarDataSource
+      if (r instanceof GlyphRenderer) {
         source = r.data_source
-      else if (r instanceof GraphRenderer)
+      } else if (r instanceof GraphRenderer) {
         source = r.node_renderer.data_source
-      else
+      } else {
+        logger.warn(`${r} is not supported in this context`)
         continue
+      }
 
       const renderers = renderers_by_source.get(source) ?? []
       renderers_by_source.set(source, [...renderers, r])
