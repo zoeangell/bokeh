@@ -61,7 +61,6 @@ export class PlotView extends LayoutDOMView implements Renderable {
 
   frame: CartesianFrame
 
-  //////////////// NEW CODE
   private _render_count: number = 0
 
   canvas_view: CanvasView
@@ -857,8 +856,6 @@ export class PlotView extends LayoutDOMView implements Renderable {
   }
 
   protected _actual_paint(): void {
-
-    //////////////// NEW CODE
     console.log("PlotView._actual_paint", this.model.id, this._render_count, "start")
 
     const {document} = this.model
@@ -939,7 +936,6 @@ export class PlotView extends LayoutDOMView implements Renderable {
     this._needs_paint = false
     this.repainted.emit()
 
-    //////////////// NEW CODE
     console.log("PlotView._actual_paint", this.model.id, this._render_count, "end")
     this._render_count++
   }
