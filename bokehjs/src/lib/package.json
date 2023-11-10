@@ -10,7 +10,6 @@
   },
   "devDependencies": {
     "@bokeh/numbro": "^1.6.2",
-    "@bokeh/slickgrid": "~2.4.4102",
     "@types/geojson": "^7946.0.10",
     "@types/google.maps": "^3.54.0",
     "@types/hammerjs": "^2.0.41",
@@ -24,6 +23,7 @@
     "nouislider": "^15.7.1",
     "proj4": "^2.8.1",
     "regl": "^2.1.0",
+    "slickgrid": "~5.4.2",
     "sprintf-js": "^1.1.2",
     "timezone": "^1.0.23",
     "tslib": "^2.6.2",

@@ -1,19 +1,14 @@
-import {RowSelectionModel} from "@bokeh/slickgrid/plugins/slick.rowselectionmodel"
-import {CheckboxSelectColumn} from "@bokeh/slickgrid/plugins/slick.checkboxselectcolumn"
-import {CellExternalCopyManager} from "@bokeh/slickgrid/plugins/slick.cellexternalcopymanager"
-
-import type {DataProvider, SortColumn, OnSortEventArgs, OnSelectedRowsChangedEventArgs, GridOptions} from "@bokeh/slickgrid"
-import {Grid as SlickGrid} from "@bokeh/slickgrid"
+import type {CustomDataView, ItemMetadata, GridOption} from "slickgrid"
+import {SlickGrid, SlickCellCopyManager, SlickRowSelectionModel, SlickCheckboxSelectColumn} from "slickgrid"
 import type * as p from "core/properties"
 import type {StyleSheetLike} from "core/dom"
 import {div} from "core/dom"
 import type {Arrayable} from "core/types"
 import {unique_id} from "core/util/string"
-import {isString, isNumber, is_defined} from "core/util/types"
+import {isNumber, is_defined} from "core/util/types"
 import {some, range, sort_by, map} from "core/util/array"
 import {is_NDArray} from "core/util/ndarray"
 import {keys} from "core/util/object"
-import {logger} from "core/logging"
 import type {DOMBoxSizing} from "../../layouts/layout_dom"
 
 import {WidgetView} from "../widget"
@@ -37,9 +32,7 @@ export const AutosizeModes = {
 }
 export type AutosizeMode = "FCV" | "FVC" | "LFF" | "NOA"
 
-let _warned_not_reorderable = false
-
-export class TableDataProvider implements DataProvider<Item> {
+export class TableDataProvider implements CustomDataView<Item> {
   index: number[]
   source: ColumnarDataSource
   view: CDSView
@@ -73,6 +66,10 @@ export class TableDataProvider implements DataProvider<Item> {
     }
     item[DTINDEX_NAME] = this.index[offset]
     return item
+  }
+
+  getItemMetadata(_index: number): ItemMetadata | null {
+    return null
   }
 
   getField(offset: number, field: string): unknown {
@@ -117,8 +114,8 @@ export class TableDataProvider implements DataProvider<Item> {
 
     this.index.sort((i0, i1) => {
       for (const [field, sign] of cols) {
-        const v0 = records[old_index.indexOf(i0)][field!]
-        const v1 = records[old_index.indexOf(i1)][field!]
+        const v0 = records[old_index.indexOf(i0)][field]
+        const v1 = records[old_index.indexOf(i1)][field]
         if (v0 === v1) {
           continue
         }
@@ -322,9 +319,9 @@ export class DataTableView extends WidgetView {
       return {...column.toColumn(), parent: this}
     })
 
-    let checkbox_selector: CheckboxSelectColumn<Item> | null = null
+    let checkbox_selector: SlickCheckboxSelectColumn<Item> | null = null
     if (this.model.selectable == "checkbox") {
-      checkbox_selector = new CheckboxSelectColumn({cssClass: tables.cell_select})
+      checkbox_selector = new SlickCheckboxSelectColumn({cssClass: tables.cell_select})
       columns.unshift(checkbox_selector.getColumnDefinition())
     }
 
@@ -342,16 +339,6 @@ export class DataTableView extends WidgetView {
       }
     }
 
-    let {reorderable} = this.model
-
-    if (reorderable && !(typeof $ != "undefined" && typeof $.fn != "undefined" && "sortable" in $.fn)) {
-      if (!_warned_not_reorderable) {
-        logger.warn("jquery-ui is required to enable DataTable.reorderable")
-        _warned_not_reorderable = true
-      }
-      reorderable = false
-    }
-
     let frozen_row = -1
     let frozen_bottom = false
     const {frozen_rows, frozen_columns} = this.model
@@ -361,9 +348,9 @@ export class DataTableView extends WidgetView {
       frozen_row = Math.abs(frozen_rows)
     }
 
-    const options: GridOptions<Item> = {
+    const options: GridOption<ColumnType> = {
       enableCellNavigation: this.model.selectable !== false,
-      enableColumnReorder: reorderable,
+      enableColumnReorder: this.model.reorderable,
       autosizeColsMode: this.autosize,
       multiColumnSort: this.model.sortable,
       editable: this.model.editable,
@@ -390,45 +377,33 @@ export class DataTableView extends WidgetView {
       this._width = Math.ceil(width)
     }
 
-    this.grid.onSort.subscribe((_event: Event, args: OnSortEventArgs<Item>) => {
+    this.grid.onSort.subscribe((_event, args) => {
       if (!this.model.sortable) {
         return
       }
-      const to_sort = args.sortCols
-      if (to_sort == null) {
+      if (!args.multiColumnSort) {
         return
       }
-      this.data.sort(to_sort)
+      const sort_cols = args.sortCols
+      this.data.sort(sort_cols)
       this.grid.invalidate()
       this.updateSelection()
       this.grid.render()
       if (!this.model.header_row) {
         this._hide_header()
       }
-      this.model.update_sort_columns(to_sort)
+      this.model.update_sort_columns(sort_cols)
     })
 
     if (this.model.selectable !== false) {
-      this.grid.setSelectionModel(new RowSelectionModel({selectActiveRow: checkbox_selector == null}))
+      this.grid.setSelectionModel(new SlickRowSelectionModel({selectActiveRow: checkbox_selector == null}))
       if (checkbox_selector != null) {
         this.grid.registerPlugin(checkbox_selector)
       }
 
-      const pluginOptions = {
-        dataItemColumnValueExtractor(val: Item, col: TableColumn) {
-          // As defined in this file, Item can contain any type values
-          let value = val[col.field]
-          if (isString(value)) {
-            value = value.replace(/\n/g, "\\n")
-          }
-          return value
-        },
-        includeHeaderWhenCopying: false,
-      }
+      this.grid.registerPlugin(new SlickCellCopyManager())
 
-      this.grid.registerPlugin(new CellExternalCopyManager(pluginOptions))
-
-      this.grid.onSelectedRowsChanged.subscribe((_event: Event, args: OnSelectedRowsChangedEventArgs<Item>) => {
+      this.grid.onSelectedRowsChanged.subscribe((_event, args) => {
         if (this._in_selection_update) {
           return
         }
