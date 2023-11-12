@@ -103,7 +103,7 @@ def bohr_diagram():
             ys = np.append(ys, y)
             #plot.circle(x=x, y=y)
             #plot.polar.circle(r=i+1, phi=list(range(0, 360, da)), phi_units="deg")
-        c1 = plot.circle(x=xs, y=ys, visible=False)
+        c1 = plot.scatter(x=xs, y=ys, size=5, visible=False)
         c1.group = group
     return plot, groups
 
