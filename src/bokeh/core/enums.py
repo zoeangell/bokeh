@@ -126,6 +126,7 @@ __all__ = (
     'Location',
     'MapType',
     'MarkerType',
+    'Movable',
     'NamedColor',
     'NumeralLanguage',
     'Orientation',
@@ -135,6 +136,7 @@ __all__ = (
     'Place',
     'RenderLevel',
     'ResetPolicy',
+    'Resizable',
     'ResolutionType',
     'RoundingFunction',
     'ScrollbarPolicy',
@@ -539,6 +541,10 @@ VerticalAlign = enumeration("top", "middle", "bottom")
 
 #: Specify a vertical location in plot layouts
 VerticalLocation = enumeration("above", "below")
+
+Movable = enumeration("none", "x", "y", "both")
+
+Resizable = enumeration("none", "left", "right", "top", "bottom", "x", "y", "all")
 
 #-----------------------------------------------------------------------------
 # Private API
