@@ -93,12 +93,6 @@ from ..model import Model
 from ..util.strings import nice_join
 from .annotations import BoxAnnotation, PolyAnnotation, Span
 from .callbacks import Callback
-from .coordinates import (
-    FrameBottom,
-    FrameLeft,
-    FrameRight,
-    FrameTop,
-)
 from .dom import Template
 from .glyphs import (
     HStrip,
@@ -111,6 +105,7 @@ from .glyphs import (
     VStrip,
     XYGlyph,
 )
+from .nodes import Node
 from .ranges import Range1d
 from .renderers import DataRenderer, GlyphRenderer
 from .ui import UIElement
@@ -436,10 +431,10 @@ DEFAULT_RANGE_OVERLAY = lambda: BoxAnnotation(
     visible=True,
     editable=True,
     propagate_hover=True,
-    left_limit=FrameLeft(),
-    right_limit=FrameRight(),
-    top_limit=FrameTop(),
-    bottom_limit=FrameBottom(),
+    left_limit=Node.frame.left,
+    right_limit=Node.frame.right,
+    top_limit=Node.frame.top,
+    bottom_limit=Node.frame.bottom,
     fill_color="lightgrey",
     fill_alpha=0.5,
     line_color="black",

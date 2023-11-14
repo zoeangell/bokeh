@@ -584,6 +584,18 @@
     },
     refs: [],
   },
+  Node: {
+    __extends__: "Model",
+    target: {
+      type: "symbol",
+      name: "unset",
+    },
+    symbol: {
+      type: "symbol",
+      name: "unset",
+    },
+    offset: 0,
+  },
   Panel: {
     __extends__: "UIElement",
     target: null,
@@ -3704,18 +3716,6 @@
       type: "symbol",
       name: "unset",
     },
-  },
-  Node: {
-    __extends__: "Model",
-    target: {
-      type: "symbol",
-      name: "unset",
-    },
-    symbol: {
-      type: "symbol",
-      name: "unset",
-    },
-    offset: 0,
   },
   RendererGroup: {
     __extends__: "Model",
