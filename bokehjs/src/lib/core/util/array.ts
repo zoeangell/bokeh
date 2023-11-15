@@ -25,7 +25,7 @@ export function tail<T>(array: ArrayLike<T>): T {
   return array[array.length-1]
 }
 
-export function last<T>(array: ArrayLike<T>): T {
+export function last<T>(array: ArrayLike<T>): T | undefined {
   return array[array.length-1]
 }
 
