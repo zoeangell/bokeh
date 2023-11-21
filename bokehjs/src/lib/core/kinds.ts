@@ -113,6 +113,16 @@ export namespace Kinds {
     }
   }
 
+  export class FiniteNumber extends Number {
+    override valid(value: unknown): value is number {
+      return super.valid(value) && isFinite(value)
+    }
+
+    override toString(): string {
+      return "FiniteNumber"
+    }
+  }
+
   export class Int extends Number {
     override valid(value: unknown): value is number {
       return super.valid(value) && tp.isInteger(value)
@@ -588,6 +598,7 @@ export const Any = new Kinds.Any()
 export const Unknown = new Kinds.Unknown()
 export const Boolean = new Kinds.Boolean()
 export const Number = new Kinds.Number()
+export const FiniteNumber = new Kinds.FiniteNumber()
 export const Int = new Kinds.Int()
 export const Bytes = new Kinds.Bytes()
 export const String = new Kinds.String()

@@ -36,8 +36,25 @@ describe("core/kinds module", () => {
   it("should support Number kind", () => {
     const tp = k.Number
     expect(`${tp}`).to.be.equal("Number")
+    expect(tp.valid(NaN)).to.be.true
+    expect(tp.valid(Infinity)).to.be.true
+    expect(tp.valid(-Infinity)).to.be.true
     expect(tp.valid(0)).to.be.true
     expect(tp.valid(0.1)).to.be.true
+    expect(tp.valid(-0.1)).to.be.true
+    expect(tp.valid("a")).to.be.false
+    expect(tp.may_have_refs()).to.be.equal(false)
+  })
+
+  it("should support FiniteNumber kind", () => {
+    const tp = k.FiniteNumber
+    expect(`${tp}`).to.be.equal("FiniteNumber")
+    expect(tp.valid(NaN)).to.be.false
+    expect(tp.valid(Infinity)).to.be.false
+    expect(tp.valid(-Infinity)).to.be.false
+    expect(tp.valid(0)).to.be.true
+    expect(tp.valid(0.1)).to.be.true
+    expect(tp.valid(-0.1)).to.be.true
     expect(tp.valid("a")).to.be.false
     expect(tp.may_have_refs()).to.be.equal(false)
   })

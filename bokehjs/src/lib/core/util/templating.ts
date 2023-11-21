@@ -169,7 +169,7 @@ export function replace_placeholders(content: string | {html: string}, data_sour
   }
 }
 
-export function process_placeholders(text: string, fn: (type: "@" | "$", spec: string, format?: string) => string): string {
+export function process_placeholders(text: string, fn: (type: "@" | "$", spec: string, format?: string) => string | null): string {
   //
   // (?:\$\w+) - special vars: $x
   // (?:@\w+) - simple names: @foo
@@ -181,6 +181,6 @@ export function process_placeholders(text: string, fn: (type: "@" | "$", spec: s
   return text.replace(regex, (_match, spec: string, format?: string) => {
     const type = spec[0] as "@" | "$"
     const name = spec.substring(1).replace(/[{}]/g, "").trim()
-    return fn(type, name, format)
+    return fn(type, name, format) ?? "???"
   })
 }
