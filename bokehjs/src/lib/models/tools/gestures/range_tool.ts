@@ -3,8 +3,11 @@ import {OnOffButton} from "../on_off_button"
 import type {PlotView} from "../../plots/plot"
 import {BoxAnnotation} from "../../annotations/box_annotation"
 import {Range1d} from "../../ranges/range1d"
+import type {RangeState} from "../../plots/range_manager"
 import {logger} from "core/logging"
 import type * as p from "core/properties"
+import {assert} from "core/util/assert"
+import {isNumber} from "core/util/types"
 import {tool_icon_range} from "styles/icons.css"
 import {Node} from "../../coordinates/node"
 
@@ -24,10 +27,12 @@ export class RangeToolView extends ToolView {
   override connect_signals(): void {
     super.connect_signals()
 
-    if (this.model.x_range != null)
+    if (this.model.x_range != null) {
       this.connect(this.model.x_range.change, () => this.model.update_overlay_from_ranges())
-    if (this.model.y_range != null)
+    }
+    if (this.model.y_range != null) {
       this.connect(this.model.y_range.change, () => this.model.update_overlay_from_ranges())
+    }
 
     this.model.overlay.pan.connect(([state, _]) => {
       if (state == "pan") {
@@ -106,13 +111,23 @@ export class RangeTool extends Tool {
     })
   }
 
+  get ranges(): {x_range: Range1d | null, y_range: Range1d | null} {
+    const {x_range, y_range, x_interaction, y_interaction} = this
+    const has_x = x_range != null && x_interaction
+    const has_y = y_range != null && y_interaction
+    return {
+      x_range: has_x ? x_range : null,
+      y_range: has_y ? y_range : null,
+    }
+  }
+
   override initialize(): void {
     super.initialize()
-
     this.overlay.editable = this.active
 
-    const has_x = this.x_range != null && this.x_interaction
-    const has_y = this.y_range != null && this.y_interaction
+    const {x_range, y_range} = this.ranges
+    const has_x = x_range != null
+    const has_y = y_range != null
 
     if (has_x && has_y) {
       this.overlay.movable = "both"
@@ -127,15 +142,46 @@ export class RangeTool extends Tool {
       this.overlay.movable = "none"
       this.overlay.resizable = "none"
     }
+
+    /*
+    if (has_x) {
+      this.overlay.min_width = x_range.min_interval ?? 0
+      this.overlay.max_width = x_range.max_interval ?? Infinity
+    }
+    if (has_y) {
+      this.overlay.min_height = y_range.min_interval ?? 0
+      this.overlay.max_height = y_range.max_interval ?? Infinity
+    }
+    */
   }
 
   update_ranges_from_overlay(): void {
     const {left, right, top, bottom} = this.overlay
-    if (this.x_range != null && this.x_interaction) {
-      this.x_range.setv({start: left, end: right})
+    const {x_range, y_range} = this.ranges
+
+    const affected_plots = new Set<PlotView>()
+    const xrs: RangeState = new Map()
+    const yrs: RangeState = new Map()
+
+    if (x_range != null) {
+      assert(isNumber(left))
+      assert(isNumber(right))
+      xrs.set(x_range, {start: left, end: right})
+      for (const plot of x_range.plots) {
+        affected_plots.add(plot)
+      }
     }
-    if (this.y_range != null && this.y_interaction) {
-      this.y_range.setv({start: bottom, end: top})
+    if (y_range != null) {
+      assert(isNumber(bottom))
+      assert(isNumber(top))
+      yrs.set(y_range, {start: bottom, end: top})
+      for (const plot of y_range.plots) {
+        affected_plots.add(plot)
+      }
+    }
+
+    for (const plot of affected_plots) {
+      plot.update_range({xrs, yrs}, {panning: true, scrolling: true})
     }
   }
 

@@ -339,22 +339,55 @@ export class BoxAnnotationView extends AnnotationView implements Pannable, Pinch
         }
       })()
 
+      const {min_width, min_height, max_width, max_height} = this.model
+
+      const dw = abs(right - left)
+      if (dw < min_width) {
+      }
+      if (dw > max_width) {
+        const Dw = dw - min_width
+        if (dl > 0 && dr > 0) {
+          left -= Dw/2
+          right -= Dw/2
+        } else if (dl > 0) {
+          left -= Dw
+        } else {
+          right -= Dw
+        }
+      }
+
+      const dh = abs(bottom - top)
+      if (dh < min_height) {
+        //const Dh = max_height - dh
+      }
+      if (dh > max_height) {
+        const Dh = dh - min_height
+        if (dt > 0 && db > 0) {
+          top -= Dh/2
+          bottom -= Dh/2
+        } else if (dt > 0) {
+          top -= Dh
+        } else {
+          bottom -= Dh
+        }
+      }
+
       const Dl = left - slimits.left
       const Dr = slimits.right - right
 
-      const Dh = min(Dl < 0 ? Dl : NaN, Dr < 0 ? Dr : NaN)
-      if (isFinite(Dh) && Dh < 0) {
-        left += -left_sign*(-Dh)
-        right += -right_sign*(-Dh)
+      const Dx = min(Dl < 0 ? Dl : NaN, Dr < 0 ? Dr : NaN)
+      if (isFinite(Dx) && Dx < 0) {
+        left += -left_sign*(-Dx)
+        right += -right_sign*(-Dx)
       }
 
       const Dt = top - slimits.top
       const Db = slimits.bottom - bottom
 
-      const Dv = min(Dt < 0 ? Dt : NaN, Db < 0 ? Db : NaN)
-      if (isFinite(Dv) && Dv < 0) {
-        top += -top_sign*(-Dv)
-        bottom += -bottom_sign*(-Dv)
+      const Dy = min(Dt < 0 ? Dt : NaN, Db < 0 ? Db : NaN)
+      if (isFinite(Dy) && Dy < 0) {
+        top += -top_sign*(-Dy)
+        bottom += -bottom_sign*(-Dy)
       }
 
       return BBox.from_lrtb({left, right, top, bottom})
@@ -511,6 +544,11 @@ export namespace BoxAnnotation {
     left_limit: p.Property<Limit>
     right_limit: p.Property<Limit>
 
+    min_width: p.Property<number>
+    min_height: p.Property<number>
+    max_width: p.Property<number>
+    max_height: p.Property<number>
+
     border_radius: p.Property<BorderRadius>
 
     editable: p.Property<boolean>
@@ -563,7 +601,7 @@ export class BoxAnnotation extends Annotation {
       ["hover_", mixins.Hatch],
     ])
 
-    this.define<BoxAnnotation.Props>(({Boolean, Number, Ref, Or}) => ({
+    this.define<BoxAnnotation.Props>(({Boolean, Number, Ref, Or, NonNegative, Positive}) => ({
       top:          [ Or(Number, Ref(Node)), () => new Node({target: "frame", symbol: "top"}) ],
       bottom:       [ Or(Number, Ref(Node)), () => new Node({target: "frame", symbol: "bottom"}) ],
       left:         [ Or(Number, Ref(Node)), () => new Node({target: "frame", symbol: "left"}) ],
@@ -578,6 +616,11 @@ export class BoxAnnotation extends Annotation {
       bottom_limit: [ Limit, null ],
       left_limit:   [ Limit, null ],
       right_limit:  [ Limit, null ],
+
+      min_width:    [ NonNegative(Number), 0 ],
+      min_height:   [ NonNegative(Number), 0 ],
+      max_width:    [ Positive(Number), Infinity ],
+      max_height:   [ Positive(Number), Infinity ],
 
       border_radius: [ BorderRadius, 0 ],
 
