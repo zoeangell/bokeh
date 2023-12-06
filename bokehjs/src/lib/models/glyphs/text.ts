@@ -28,7 +28,7 @@ export class TextView extends XYGlyphView {
   override after_visuals(): void {
     super.after_visuals()
 
-    const {text} = this.base ?? this
+    const {text} = this.base_glyph ?? this
     this.labels = Array.from(text, (value) => {
       if (value == null) {
         return null
@@ -39,7 +39,7 @@ export class TextView extends XYGlyphView {
     })
 
     const n = this.data_size
-    const {anchor} = this.base ?? this
+    const {anchor} = this.base_glyph ?? this
     const {padding, border_radius} = this.model
 
     const {text_align, text_baseline} = this.visuals.text
