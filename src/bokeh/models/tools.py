@@ -197,6 +197,12 @@ class Tool(Model):
     user interface as a tooltip.
     """)
 
+    visible = Bool(True, help="""
+    A boolean attribute that determines if a tool is displayed in the toolbar.
+    If set to false, the tool will be hidden. The visible attribute is default
+    set to true.
+    """)
+
     _known_aliases: tp.ClassVar[dict[str, tp.Callable[[], Tool]]] = {}
 
     @classmethod

@@ -18,6 +18,7 @@ export namespace ToolProxy {
     tools: p.Property<T[]>
     active: p.Property<boolean>
     disabled: p.Property<boolean>
+    visible: p.Property<boolean>
   }
 }
 
@@ -81,6 +82,11 @@ export class ToolProxy<T extends Tool> extends Model {
     return this.tools[0].computed_icon
   }
 
+  get visible(): boolean {
+    const tool = this.tools[0] as Tool
+    return "visible" in tool && tool.visible
+  }
+  
   get toggleable(): boolean {
     const tool = this.tools[0] as Tool
     return "toggleable" in tool && (tool as InspectTool).toggleable

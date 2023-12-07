@@ -126,6 +126,7 @@ export namespace Tool {
     description: p.Property<string | null>
     active: p.Property<boolean>
     disabled: p.Property<boolean>
+    visible: p.Property<boolean>
   }
 }
 
@@ -145,6 +146,10 @@ export abstract class Tool extends Model {
     this.define<Tool.Props>(({String, Regex, Nullable, Or}) => ({
       icon: [ Nullable(Or(ToolIcon, Regex(/^--/), Regex(/^\./), Regex(/^data:image/))), null ],
       description: [ Nullable(String), null ],
+    }))
+
+    this.define<Tool.Props>(({Boolean}) => ({
+      visible: [ Boolean, true ],
     }))
 
     this.internal<Tool.Props>(({Boolean}) => ({
